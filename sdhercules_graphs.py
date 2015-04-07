@@ -23,9 +23,19 @@ import logging, logging.handlers
 import uuid
 
 #import matplotlib
+from matplotlib.pyplot import *
+from numpy import *
+
+import pandas as pd
+#import matplotlib.pyplot as plt
+
 from matplotlib import pyplot
 from matplotlib.dates import DayLocator, HourLocator, DateFormatter, drange
 from numpy import arange
+
+from matplotlib.ticker import FuncFormatter
+import matplotlib.pyplot as plt
+import numpy as np
 
 import tinys3
 
@@ -69,23 +79,71 @@ except:
 def generate_uuid():
 	return uuid.uuid1()
 
-def test_graph():
-	logger.debug("test")
-	X = range(0,100)
-	Y = [ i*i for i in X ]
+
+
+def test():
+	x = linspace(0,5,50)
+	y = x**2
+	plot(x,y,'r')
+	xlabel('x')
+	#ylabel('y')
+	title(u'Título') # el caracter `u` es necesario para incluir acentos en el texto
+	show() # muestra el gráfico en una ventana, si no se ha usado %matplotlib inline
+
+	fig = figure()
+
+	ejes = fig.add_axes([0.1, 0.1, 0.8, 0.8]) # izquierda, abajo, ancho, altura (rango 0 a 1)
+
+	ejes.plot(x,y,'r')
+
+	ejes.set_xlabel('x')
+	ejes.set_ylabel('y')
+	ejes.set_title(u'Robos/meses');
+
+
+def graph1():
+	logger.debug("Graph1")
 	
-	pyplot.plot( X, Y, '-' )
-	pyplot.title( 'Numero de robos' )
-	pyplot.xlabel( 'Dia' )
-	pyplot.ylabel( 'Robos' )
+	x = np.arange(12)
+	robos = [12, 2, 5, 27, 2, 5, 8, 9, 12, 15, 34, 21]
 	
+	index = np.arange(12)
+	bar_width = 0.8
+	opacity = 1
+	
+	#my_colors = 'kkkkkkkkrkkk'  #red, green, blue, black, etc.
+
+	my_colors = ('grey','grey','grey','grey','grey','grey','grey','red','grey','grey','grey','grey')
+	plt.bar(index, robos, bar_width,
+		alpha=opacity,
+		color=my_colors)
+
+	plt.yticks(robos, ['','','','','','','','','','','','' ]) 
+	plt.xticks( x + 0.4,  ('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12') )
+
+	plt.title(u'Robos/meses');
+	
+	plt.box()
+	
+	'''
+	plt.boxplot(plt, x, notch=False, sym='b+', vert=True, whis=1.5,
+		positions=None, widths=None, patch_artist=False,
+		bootstrap=None, usermedians=None, conf_intervals=None,
+		meanline=False, showmeans=False, showcaps=True,
+		showbox=True, showfliers=True, boxprops=None, labels=None,
+		flierprops=None, medianprops=None, meanprops=None,
+		capprops=None, whiskerprops=None, manage_xticks=True)
+	'''
+
+	plt.show()
+
+	'''
 	file_name = str(generate_uuid()) + '.png'
 	complete_file_name = GRAPHS_FOLDER + '/' + file_name
 	logger.debug ("Generando grafico: " + file_name)
-	pyplot.savefig( complete_file_name )
-	pyplot.show()
-
-	return [file_name,complete_file_name]
+	plt.savefig( complete_file_name )
+	'''
+	#return [file_name,complete_file_name]
 
 def generate_graphs():
 	date1 = datetime.datetime( 2000, 3, 2)
@@ -138,7 +196,8 @@ def main():
  
 if __name__ == '__main__':
 	#main()
-	test_graph()
+	#test()
+	graph1()
 
 
 
