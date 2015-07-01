@@ -511,21 +511,22 @@ def grafico_historial_robos(graph_data_x, graph_data_y, graph_data2_x, graph_dat
 	plt.box()
 	
 	# Buscamos los maximos locales
-	valores = np.array([graph_data_y[0]])
-	for i in range(1, 11):
-		valores = np.concatenate((valores, np.array([graph_data_y[i]])))	
-	maximos = argrelextrema(valores, np.greater)[0]
+	valores = np.array([robos_extendido[0]])
+	print robos_extendido
+	for i in range(1, 15):
+		valores = np.concatenate((valores, np.array([robos_extendido[i]])))	
+	maximos = argrelextrema(valores, np.greater, mode='wrap')[0]
 
 
 	# Pintar los maximos en la grafica
 	for index_max in maximos:
-		bbox_props = dict(boxstyle="round", fc="grey", ec="0.9", alpha=0)
-		if (graph_data_y[index_max]<10):
-			t= ax.text(index_max-0.1, graph_data_y[index_max]+ (value_max*0.3)/ 7 ,graph_data_y[index_max], bbox=bbox_props, fontsize=8, color='k')
+		bbox_props = dict(boxstyle="round", fc="grey", ec="0.9", alpha=0.5)
+		if (robos_extendido[index_max]<10):
+			t= ax.text(index_max-0.1, robos_extendido[index_max]+ (value_max*0.3)/ 7 ,int(robos_extendido[index_max]), bbox=bbox_props, fontsize=8, color='k')
 		else:
-			t= ax.text(index_max-0.2, graph_data_y[index_max]+ (value_max*0.3)/ 7 ,graph_data_y[index_max], bbox=bbox_props, fontsize=8, color='k')
+			t= ax.text(index_max-0.2, robos_extendido[index_max]+ (value_max*0.3)/ 7 ,int(robos_extendido[index_max]), bbox=bbox_props, fontsize=8, color='k')
 
-		plt.axvline(x=index_max, ymin=0, ymax =float(float(graph_data_y[index_max])/float(value_max*1.2)), linewidth=1, linestyle=':', color='grey')
+		plt.axvline(x=index_max, ymin=0, ymax =float(float(robos_extendido[index_max])/float(value_max*1.2)), linewidth=1, linestyle=':', color='grey')
 		
 		#print float((2.1/float(value_max)))
 		#plt.scatter(index_max, graph_data_y[index_max]+float((2.7/float(value_max))), s=500, facecolors='none', edgecolors='grey', linestyle=':')
@@ -574,7 +575,10 @@ def main():
 	graph4_data2_x = ['MAY-15', 'JUN-15', 'JUL-15']
 	graph4_data2_y = [387.0, 359.0, 406.0]
 	#graph4_data_y = [21, 13, 4, 23, 11, 10, 8, 7, 9, 12, 8, 5]
-	#graph4_data2_y = [4, 2, 2, 5]
+	#graph4_data2_y = [4, 2, 2, 5]	
+	graph4_data_y = [222, 200, 230, 173, 217, 259, 273, 282, 249, 244, 288, 119, 431.0]
+	graph4_data2_y =[437.0, 550.0, 229.0]
+
 	grafico_historial_robos(graph4_data_x, graph4_data_y, graph4_data2_x, graph4_data2_y)
 
 
