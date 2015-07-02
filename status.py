@@ -11,9 +11,10 @@
 # Initial version
 # Requisites: 
 #	library configobj 			To install: "apt-get install python-configobj"
-#   libary boto (amazonS3)		To install: "pip install boto"
-#   libary tinyS3 (amazonS3)	To install: "pip install tinys3"
-#   libary mandrill 			To install: "pip install mandrill"
+#   library boto (amazonS3)		To install: "pip install boto"
+#   library tinyS3 (amazonS3)	To install: "pip install tinys3"
+#   library mandrill 			To install: "pip install mandrill"
+#   library urllib2 			To install: "pip install urllib2"
 ##################################################################################
 
 import time
@@ -23,6 +24,9 @@ import datetime
 import logging, logging.handlers
 import sqlalchemy
 import uuid
+import httplib
+import urllib2
+#import urllib
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
@@ -44,6 +48,9 @@ S3_ENDPOINT = config['s3_endpoint']
 S3_ACCESS_KEY = config['s3_keyId']
 S3_SECRET_KEY = config['s3_secretKey']
 S3_BUCKET = config['s3_bucket']
+S3_TEST_FILE_NAME = config['s3_test_file_name']
+S3_TEST_FILE_COMPLETE_NAME = config['s3_test_file_complete_name']
+
 
 MANDRILL_KEY = config['mandrill_key']
 ########################################################################
@@ -99,6 +106,42 @@ def send2s3(file_name, complete_file_name):
 		logger.error ("Error al acceder al fichero: error({0}): {1}".format(e.errno, e.strerror))
 
 
+def testS3():
+	try:
+		f = open(S3_TEST_FILE_COMPLETE_NAME,'rb') 
+
+	    # Conectar con S3
+		conn = tinys3.Connection(S3_ACCESS_KEY,S3_SECRET_KEY,tls=True, endpoint=S3_ENDPOINT)
+		logger.debug ("Conectado con S3")
+		
+		# Subir el fichero a S3
+		conn.upload(S3_TEST_FILE_NAME,f,S3_BUCKET,public=True)
+		logger.debug ("Fichero subido a S3")
+		
+		# Construir la url
+		s3_url_graph = "https://" + S3_ENDPOINT + "/" + S3_BUCKET + "/" + S3_TEST_FILE_NAME
+		logger.debug ("URL del grafico en S3: " + s3_url_graph)
+
+		# Comprobar 
+		req = urllib2.Request(s3_url_graph)
+		urllib2.urlopen(req)
+		return "OK"
+
+	except urllib2.HTTPError, e:
+		logger.error('HTTPError = ' + str(e.code))
+	except urllib2.URLError, e:
+		logger.error('URLError = ' + str(e.reason))
+	except httplib.HTTPException, e:
+		logger.error('HTTPException')
+	except IOError as e:
+		logger.error ("Error al acceder al fichero: error({0}): {1}".format(e.errno, e.strerror))
+	except Exception:
+		import traceback
+		logger.error('generic exception: ' + traceback.format_exc())
+    	
+	return "NOK"
+
+
 def send_mail_with_mandrill(template_name, template_content, message, send_at):
     mandrill_client = mandrill.Mandrill(settings.MANDRILL_API_KEY)
     try:
@@ -133,7 +176,8 @@ def test_send_mail_template(template_name, email_to, context):
 def main():
 	
 	# Se envia a AmazonS3
-	send2s3 ('test.png',GRAPHS_FOLDER + '/test.png')
+	#send2s3 ('test.png',GRAPHS_FOLDER + '/test.png')
+	print testS3()
  
 
  	# Envio de mail
