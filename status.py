@@ -27,6 +27,8 @@ import uuid
 import httplib
 import urllib2
 #import urllib
+import locale
+import pytz
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
@@ -51,8 +53,12 @@ S3_BUCKET = config['s3_bucket']
 S3_TEST_FILE_NAME = config['s3_test_file_name']
 S3_TEST_FILE_COMPLETE_NAME = config['s3_test_file_complete_name']
 
+MANDRILL_API_KEY = config['mandrill_key']
+MANDRILL_FROM_EMAIL = config['test_from_email'] 
+MANDRILL_FROM_NAME = config['test_from_name']
+MANDRILL_TEMPLATE_NAME = config['test_template_name']
+MANDRILL_SUBJECT = config['test_subject']
 
-MANDRILL_KEY = config['mandrill_key']
 ########################################################################
 
 #### LOGGER #########################################################
@@ -75,38 +81,8 @@ except:
 # Funciones auxiliares
 #
 ########################################################################
-def send2s3(file_name, complete_file_name):
-	"""Envia un fichero a AmazonS3.
 
-    Devuelve la url del fichero subido a S3
-
-    Utiliza la credendiales en S3 definidas a nivel global
-
-    Excepciones:
-    IOError -- Si error al abrir el fichero
-
-    """
-	# Abrir el fichero
-	try:
-		f = open(complete_file_name,'rb') 
-
-	    # Conectar con S3
-		conn = tinys3.Connection(S3_ACCESS_KEY,S3_SECRET_KEY,tls=True, endpoint='s3-eu-west-1.amazonaws.com')
-		logger.debug ("Conectado con S3")
-		
-		# Subir el fichero a S3
-		conn.upload(file_name,f,S3_BUCKET,public=True)
-		logger.debug ("Fichero subido a S3")
-		
-		# Construir la url
-		s3_url_graph = S3_ENDPOINT + "/" + S3_BUCKET + "/" + file_name
-		logger.debug ("URL del grafico en S3: " + s3_url_graph)
-		return s3_url_graph
-	except IOError as e:
-		logger.error ("Error al acceder al fichero: error({0}): {1}".format(e.errno, e.strerror))
-
-
-def testS3():
+def test_s3():
 	try:
 		f = open(S3_TEST_FILE_COMPLETE_NAME,'rb') 
 
@@ -142,57 +118,56 @@ def testS3():
 	return "NOK"
 
 
+def test_mandril():
+	global_merge_vars_array = []
+	to_array = []
+	merge_vars_array = []
+	to_array.append({'email': 'crueda@gmail.com'})
+	message = {'from_email': MANDRILL_FROM_EMAIL, 'from_name': MANDRILL_FROM_NAME,
+		'to': to_array,
+        'merge_vars': merge_vars_array, 'global_merge_vars': global_merge_vars_array,
+        'subject': 'test'}
+	send_at_date = datetime.datetime.now()
+	if send_at_date < datetime.datetime.now():
+		send_at_date = send_at_date + datetime.timedelta(days=0)
+	local_tz = pytz.timezone('Europe/Madrid')
+	send_at_date = local_tz.localize(send_at_date, is_dst=None)
+	send_at_date = send_at_date.astimezone(pytz.utc)
+	response = send_mail_with_mandrill(MANDRILL_TEMPLATE_NAME, [], message, send_at_date)
+	for r in response:
+		try:
+			if (r['status']=='sent'):
+				return "OK"
+			else:
+				return "NOK"
+
+		except Exception as e:
+			raise e
+			return "NOK"
+
+	return "OK"
+
+
 def send_mail_with_mandrill(template_name, template_content, message, send_at):
-    mandrill_client = mandrill.Mandrill(settings.MANDRILL_API_KEY)
-    try:
-        response = mandrill_client.messages.send_template(template_name=template_name,
+	mandrill_client = mandrill.Mandrill(MANDRILL_API_KEY)
+	try:
+		response = mandrill_client.messages.send_template(template_name=template_name,
                                                           template_content=template_content,
                                                           message=message,
                                                           send_at=send_at.strftime("%Y-%m-%d %H:%M:%S"))
-        return response
-    except Exception as e:
-        logger.critical(e)
-        raise e
-
-
-
-def test_send_mail_template(template_name, email_to, context):
-    mandrill_client = mandrill.Mandrill(MANDRILL_KEY)
-    message = {
-        'to': [],
-        'global_merge_vars': []
-    }
-    for em in email_to:
-        message['to'].append({'email': em})
- 
-    for k, v in context.iteritems():
-        message['global_merge_vars'].append(
-            {'name': k, 'content': v}
-        )
-    mandrill_client.messages.send_template(template_name, [], message)
-
+		return response
+	except Exception as e:
+		logger.critical(e)
+		raise e
 
 
 def main():
-	
-	# Se envia a AmazonS3
-	#send2s3 ('test.png',GRAPHS_FOLDER + '/test.png')
-	print testS3()
+	print "Testing S3 ..........."
+	print "                      -> " + test_s3()
+ 	print "Testing Mandrill ....."
+	print "                      -> " + test_mandril()
  
-
- 	# Envio de mail
- 	#kwargs = {'api_key': MANDRILL_KEY, 'reply_to': 
- 	#		'noreply@sd.com', 
- 	#		'recipient': 'Recipient', 
- 	#		'from_email': 'noreply@sd.com'
- 	#}
-	#send_mail(to=username, msg='Atención, detectado robo en su zona!', subj='Alerta de robo', **kwargs)
-
-	# Intentos de envio de mail usando plantilla
- 	#test_send_mail_template('template1', [username], context={'Name': "Bob Marley"})
- 	#send_mail_template('template1', username)
-
-	sys.exit()
+	#sys.exit()
  
 if __name__ == '__main__':
     main()
