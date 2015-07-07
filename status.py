@@ -98,6 +98,10 @@ def test_s3():
 		# Comprobar 
 		req = urllib2.Request(s3_url_graph)
 		urllib2.urlopen(req)
+
+		# Borrar el fichero subido
+		conn.delete(S3_TEST_FILE_NAME,S3_BUCKET)
+
 		return "OK"
 
 	except urllib2.HTTPError, e:
@@ -114,39 +118,6 @@ def test_s3():
     	
 	return "NOK"
 
-
-
-def del_s3():
-
-
-	#conn.delete('key.jpg','my_bucket')
-
-def del_s3_0():
-	http = chilkat.CkHttp()
-
-	success = http.UnlockComponent("Anything for 30-day trial")
-	if (success != True):
-		print(http.lastErrorText())
-		sys.exit()
-
-	#  Insert your access key here:
-	http.put_AwsAccessKey(S3_ACCESS_KEY)
-
-	#  Insert your secret key here:
-	http.put_AwsSecretKey(S3_SECRET_KEY)
-
-	http.put_AwsEndpoint("s3-eu-west-1.amazonaws.com")
-
-	#success = http.S3_DeleteObject(S3_BUCKET,S3_TEST_FILE_NAME)
-	success = http.S3_DeleteObject("","sd-hercules-resources/graphics/test.png")
-
-	
-
-
-	if (success != True):
-		print(http.lastErrorText())
-	else:
-		print("Remote file deleted.")
 
 def test_mandril():
 	global_merge_vars_array = []
@@ -193,11 +164,10 @@ def send_mail_with_mandrill(template_name, template_content, message, send_at):
 
 def main():
 	print "Testing S3 ..........."
-	#print "                      -> " + test_s3()
+	print "                      -> " + test_s3()
  	print "Testing Mandrill ....."
-	#print "                      -> " + test_mandril()
+	print "                      -> " + test_mandril()
  	
- 	del_s3()
 
 	#sys.exit()
  
